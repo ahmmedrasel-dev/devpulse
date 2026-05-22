@@ -1,4 +1,6 @@
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import config from "../../config";
 import { pool } from "../../db/db";
 import type { IUser } from "./auth.interface";
 
@@ -32,6 +34,40 @@ export const signup = async (userData: IUser) => {
   }
 };
 
+const login = async (email: string, password: string) => {
+  if (!email || !password) {
+    throw new Error("Email and password are required");
+  }
+
+  try {
+    const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [
+      email,
+    ]);
+
+    const user = result.rows[0];
+    if (!user) {
+      throw new Error("Invalid email or password");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new Error("Invalid email or password");
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      config.jwtSecret as string,
+      { expiresIn: "1h" },
+    );
+
+    return token;
+  } catch (error: any) {
+    throw error;
+  }
+};
+
 export const authService = {
   signup,
+  login,
 };

@@ -21,3 +21,24 @@ export const signup = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const token = await authService.login(email, password);
+
+    return sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "User logged in successfully",
+      data: { token },
+    });
+  } catch (error: any) {
+    return sendResponse(res, {
+      statusCode: 401,
+      success: false,
+      message: "Invalid email or password",
+      error: error.message,
+    });
+  }
+};
