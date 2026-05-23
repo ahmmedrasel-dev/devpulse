@@ -31,7 +31,7 @@ export const login = async (req: Request, res: Response) => {
       statusCode: 200,
       success: true,
       message: "User logged in successfully",
-      data: { token },
+      data: token,
     });
   } catch (error: any) {
     return sendResponse(res, {

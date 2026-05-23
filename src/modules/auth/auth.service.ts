@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "../../config";
 import { pool } from "../../db/db";
-import type { IUser } from "./auth.interface";
+import type { IUser, JWTPayload } from "./auth.interface";
 
 export const signup = async (userData: IUser) => {
   const { name, email, password, role } = userData;
@@ -54,14 +54,21 @@ const login = async (email: string, password: string) => {
       throw new Error("Invalid email or password");
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
-      config.jwtSecret as string,
-      { expiresIn: "1h" },
-    );
+    const payload: JWTPayload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      created_at: user.created_at,
+      updated_at: user.updated_at,
+    };
 
-    return token;
+    // Generate JWT token
+    const token = jwt.sign(payload, config.jwtSecret as string, {
+      expiresIn: "1h",
+    });
+
+    return { token, user: payload };
   } catch (error: any) {
     throw error;
   }
