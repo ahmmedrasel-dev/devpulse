@@ -60,3 +60,40 @@ export const getIssues = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const getIssueById = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (isNaN(id)) {
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: "Invalid issue ID",
+      });
+    }
+
+    const issue = await issueService.getIssueById(id);
+
+    if (!issue) {
+      return sendResponse(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue not found",
+      });
+    }
+
+    return sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      data: issue,
+    });
+  } catch (error: any) {
+    return sendResponse(res, {
+      statusCode: 500,
+      success: false,
+      message: "An error occurred while retrieving the issue",
+      error: error.message,
+    });
+  }
+};

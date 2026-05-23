@@ -15,4 +15,9 @@ router.get(
   issueController.getIssues,
 );
 
+router.get(
+  "/:id",
+  issueController.getIssueById,
+);
+
 export const issueRoutes: Router = router;
