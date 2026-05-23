@@ -174,3 +174,58 @@ export const updateIssue = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const deleteIssue = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const userId = req.user?.id;
+    const userRole = req.user?.role; // contributor / maintainer
+
+    if (!userId || !userRole) {
+      return sendResponse(res, {
+        statusCode: 401,
+        success: false,
+        message: "Unauthorized Access",
+      });
+    }
+
+    // Role restriction
+    if (userRole !== "maintainer") {
+      return sendResponse(res, {
+        statusCode: 403,
+        success: false,
+        message: "Access Denied: Maintainers only",
+      });
+    }
+
+    if (isNaN(id)) {
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: "Invalid issue ID",
+      });
+    }
+
+    const deleted = await issueService.deleteIssue(id);
+    if (!deleted) {
+      return sendResponse(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue not found",
+      });
+    }
+
+    return sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue deleted successfully",
+    });
+  } catch (error: any) {
+    return sendResponse(res, {
+      statusCode: 500,
+      success: false,
+      message: "An error occurred while deleting the issue",
+      error: error.message,
+    });
+  }
+};

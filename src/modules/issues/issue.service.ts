@@ -207,9 +207,18 @@ const updateIssue = async (
   return result.rows[0];
 };
 
+const deleteIssue = async (id: number) => {
+  const result = await pool.query(
+    "DELETE FROM issues WHERE id = $1 RETURNING id",
+    [id]
+  );
+  return (result.rowCount ?? 0) > 0;
+};
+
 export const issueService = {
   createIssue,
   getIssues,
   getIssueById,
   updateIssue,
+  deleteIssue,
 };
