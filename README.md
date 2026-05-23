@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS issues (
 | **POST** | `/api/issues` | Private | Creates a new issue. Requires standard Bearer Token. Accessible by `contributor` and `maintainer`. |
 | **GET** | `/api/issues` | Public | Retrieves all issues. Supports query params: `sort=newest/oldest`, `type=bug/feature_request`, `status=open/in_progress/resolved`. |
 | **GET** | `/api/issues/:id` | Public | Retrieves full details of a specific issue by its ID. |
+| **PATCH** | `/api/issues/:id` | Private | Updates an issue's `title`, `description`, or `type`. Accessible by `maintainer` (any status) or `contributor` (own issue, status must be `open`). |
 
 ---
 

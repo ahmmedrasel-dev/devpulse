@@ -156,8 +156,60 @@ const getIssueById = async (id: number) => {
   };
 };
 
+const updateIssue = async (
+  id: number,
+  updateData: { title?: string; description?: string; type?: string }
+) => {
+  const fieldsToUpdate: string[] = [];
+  const values: any[] = [];
+
+  // Add fields dynamically if provided
+  if (updateData.title !== undefined) {
+    values.push(updateData.title);
+    fieldsToUpdate.push(`title = $${values.length}`);
+  }
+
+  if (updateData.description !== undefined) {
+    values.push(updateData.description);
+    fieldsToUpdate.push(`description = $${values.length}`);
+  }
+
+  if (updateData.type !== undefined) {
+    const normalizedType = normalizeIssueType(updateData.type);
+    if (normalizedType !== "bug" && normalizedType !== "feature_request") {
+      throw new Error("Invalid issue type");
+    }
+    values.push(normalizedType);
+    fieldsToUpdate.push(`type = $${values.length}`);
+  }
+
+  // If no fields to update, just return the current issue
+  if (fieldsToUpdate.length === 0) {
+    const result = await pool.query(
+      "SELECT id, title, description, type, status, reporter_id, created_at, updated_at FROM issues WHERE id = $1",
+      [id]
+    );
+    return result.rows[0];
+  }
+
+  // Update timestamps
+  fieldsToUpdate.push(`updated_at = NOW()`);
+  values.push(id);
+
+  const queryText = `
+    UPDATE issues
+    SET ${fieldsToUpdate.join(", ")}
+    WHERE id = $${values.length}
+    RETURNING id, title, description, type, status, reporter_id, created_at, updated_at
+  `;
+
+  const result = await pool.query(queryText, values);
+  return result.rows[0];
+};
+
 export const issueService = {
   createIssue,
   getIssues,
   getIssueById,
+  updateIssue,
 };

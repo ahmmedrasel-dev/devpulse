@@ -97,3 +97,80 @@ export const getIssueById = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const updateIssue = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      return sendResponse(res, {
+        statusCode: 401,
+        success: false,
+        message: "Unauthorized Access",
+      });
+    }
+
+    if (isNaN(id)) {
+      return sendResponse(res, {
+        statusCode: 400,
+        success: false,
+        message: "Invalid issue ID",
+      });
+    }
+
+    const { title, description, type } = req.body;
+
+    // Fetch the issue to verify it exists and check authorization
+    const issue = await issueService.getIssueById(id);
+    if (!issue) {
+      return sendResponse(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue not found",
+      });
+    }
+
+    // Authorization Rules:
+    // - Maintainer (any issue)
+    // - Contributor (own issue, only if status is open)
+    if (userRole === "contributor") {
+      if (issue.reporter?.id !== userId) {
+        return sendResponse(res, {
+          statusCode: 403,
+          success: false,
+          message: "You do not have permission to update this issue",
+        });
+      }
+      if (issue.status !== "open") {
+        return sendResponse(res, {
+          statusCode: 403,
+          success: false,
+          message: "Contributors can only update issues with an 'open' status",
+        });
+      }
+    }
+
+    // Call service to perform the update
+    const updatedIssue = await issueService.updateIssue(id, {
+      title,
+      description,
+      type,
+    });
+
+    return sendResponse(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue updated successfully",
+      data: updatedIssue,
+    });
+  } catch (error: any) {
+    return sendResponse(res, {
+      statusCode: 500,
+      success: false,
+      message: "An error occurred while updating the issue",
+      error: error.message,
+    });
+  }
+};

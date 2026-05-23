@@ -20,4 +20,10 @@ router.get(
   issueController.getIssueById,
 );
 
+router.patch(
+  "/:id",
+  authorize("contributor", "maintainer"),
+  issueController.updateIssue,
+);
+
 export const issueRoutes: Router = router;
